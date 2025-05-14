@@ -1,0 +1,7 @@
+.hideBar {
+    top: -100px;
+}
+
+.appBarCommon {
+    transition: all 0.3s;
+}

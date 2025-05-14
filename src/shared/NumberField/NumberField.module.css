@@ -1,0 +1,23 @@
+.numberField {
+  border: unset;
+  font-weight: bold;
+  width: 30px;
+  line-height: 150%;
+  font-size: 16px;
+  outline: none;
+  text-align: center;
+  background-color: transparent;
+  color: inherit;
+}
+.textFieldWrapper {
+    border: 1px solid #ebebeb;
+    border-radius: 999px;
+    display: inline-flex;
+}
+.buttonLeft {
+    padding: 3px;
+}
+
+.buttonRight {
+    padding: 3px;
+}
