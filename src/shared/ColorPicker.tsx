@@ -1,9 +1,9 @@
-import * as React from 'react';
 import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
 import Typography from '@mui/material/Typography';
+import * as React from 'react';
 
-export default function DynamicValues() {
+export default function ColorPicker() {
   const [color, setColor] = React.useState('#007fff');
 
   return (

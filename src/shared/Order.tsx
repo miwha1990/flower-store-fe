@@ -1,22 +1,23 @@
 import { useAppStore } from '@/app/App';
+import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import {
   Avatar,
   IconButton,
-  Stack,
   List,
   ListItem,
   ListItemAvatar,
   ListItemText,
+  Stack,
   Typography,
 } from '@mui/material';
-import { Flower } from './types/Flower';
-import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import { NumberField } from './NumberField/NumberField';
+import { Flower } from './types/Flower';
 import { calculateTotal } from './utils';
 
 export function Order({ maxHeight }: { maxHeight?: number }) {
   const appStore = useAppStore();
   const orders = [...appStore.bucketItems.entries()];
+  console.log(orders, 'orders');
   return (
     <>
       <List sx={maxHeight ? { maxHeight, overflow: 'auto', mb: 1 } : { mb: 1 }}>
@@ -37,30 +38,31 @@ export function Order({ maxHeight }: { maxHeight?: number }) {
             <ListItemAvatar>
               <Avatar src={flower.imageSrc} />
             </ListItemAvatar>
-            <ListItemText
-              primary={flower.name}
-              secondary={
-                <Stack
-                  direction={'row'}
-                  justifyContent={'space-between'}
-                  alignItems={'center'}
-                >
-                  <Typography variant="body1" fontWeight="bold">
-                    грн. {flower.price}
+            <Stack
+              direction={'row'}
+              justifyContent={'space-between'}
+              alignItems={'center'}
+              sx={{ width: '100%' }}
+            >
+              <ListItemText
+                primary={flower.name}
+                secondary={
+                  <Typography variant="body1" fontWeight="bold" component="span">
+                    {flower.price} грн.
                   </Typography>
-                  <NumberField
-                    onChange={(value) =>
-                      appStore.changeBucketItem({
-                        item: flower,
-                        amount: value,
-                      })
-                    }
-                    max={flower.amount}
-                    defaultValue={amount}
-                  />
-                </Stack>
-              }
-            />
+                }
+              />
+              <NumberField
+                onChange={(value) =>
+                  appStore.changeBucketItem({
+                    item: flower,
+                    amount: value,
+                  })
+                }
+                max={flower.amount}
+                defaultValue={amount}
+              />
+            </Stack>
           </ListItem>
         ))}
       </List>

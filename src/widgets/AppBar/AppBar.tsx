@@ -1,28 +1,28 @@
-import * as React from 'react';
-import { styled, alpha, useColorScheme } from '@mui/material/styles';
-import Box from '@mui/material/Box';
-import AppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import IconButton from '@mui/material/IconButton';
-import Container from '@mui/material/Container';
-import Divider from '@mui/material/Divider';
-import Link from '@mui/material/Link';
-import Drawer from '@mui/material/Drawer';
-import MenuIcon from '@mui/icons-material/Menu';
-import Typography from '@mui/material/Typography';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import PhoneIcon from '@mui/icons-material/Phone';
-import ColorModeIconDropdown from '@/features/ColorModeIconDropdown/ColorModeIconDropdown';
-import AppBarLoginState from '@/features/AppBarLoginState';
 import LogoDark from '@/assets/dark-logo.png';
 import LogoLight from '@/assets/light-logo.png';
-import { Badge, useScrollTrigger } from '@mui/material';
+import AppBarLoginState from '@/features/AppBarLoginState';
+import ColorModeIconDropdown from '@/features/ColorModeIconDropdown/ColorModeIconDropdown';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import MenuIcon from '@mui/icons-material/Menu';
+import PhoneIcon from '@mui/icons-material/Phone';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
+import { Badge, useScrollTrigger } from '@mui/material';
+import AppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Container from '@mui/material/Container';
+import Divider from '@mui/material/Divider';
+import Drawer from '@mui/material/Drawer';
+import IconButton from '@mui/material/IconButton';
+import Link from '@mui/material/Link';
+import { alpha, styled, useColorScheme } from '@mui/material/styles';
+import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
+import * as React from 'react';
 
+import { useAppStore } from '@/app/App';
+import { ShoppingCartDrawer } from '@/pages/home/components/ShopingCartDrawer';
 import cn from 'classnames';
 import Css from './AppBar.module.css';
-import { ShoppingCartDrawer } from '@/pages/home/components/ShopingCartDrawer';
-import { useAppStore } from '@/app/App';
 
 const StyledToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
@@ -94,10 +94,10 @@ export default function AppAppBar() {
             <AppBarLoginState />
             <ColorModeIconDropdown />
           </Box>
-          <Box sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>
+          <Box id="navbar-actions-buttons" sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>
             <Link href="tel:+3809912312312">
               <IconButton>
-                <Badge badgeContent={appStore.bucketItems.size} color="warning">
+                <Badge color="warning">
                   <PhoneIcon color="action" />
                 </Badge>
               </IconButton>

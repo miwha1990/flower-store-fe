@@ -10,7 +10,7 @@ import { MuiTelInput } from 'mui-tel-input';
 import { useContext, useState } from 'react';
 
 export function UserDetails() {
-  const { user } = useContext(UserContext);
+  const { user, setUser } = useContext(UserContext);
   const [sameClient, setSameClient] = useState(true);
   const [clientPhone, setClientPhone] = useState(user?.phone || '');
   const [recipPhone, setRecipPhone] = useState('');
@@ -20,17 +20,19 @@ export function UserDetails() {
       <TextField
         type="email"
         required
-        disabled={!!user?.email}
         id="email_field"
         name="email"
         label="Email"
-        defaultValue={user?.email}
+        value={user?.email}
+        slotProps={{ htmlInput: { readOnly: Boolean(user?.email) } }}
       />
       <TextField
         required
         id="name_field"
+        name="name"
         label="І`мя замовника"
-        defaultValue={user?.name}
+        value={user?.name}
+        slotProps={{ htmlInput: { readOnly: Boolean(user?.name) } }}
       />
       <MuiTelInput
         required
@@ -39,10 +41,16 @@ export function UserDetails() {
         id="phone_field"
         label="Телефон замовника"
         value={clientPhone}
-        onChange={(value) => setClientPhone(value)}
+        onChange={(value) => {
+          setClientPhone(value);
+          setUser((currentUser) =>
+            currentUser ? { ...currentUser, phone: value } : currentUser
+          );
+        }}
       />
 
       <RadioGroup
+        name="recipient"
         defaultValue="same"
         onChange={(_event, value) => {
           setSameClient(value === 'same');
@@ -73,6 +81,7 @@ export function UserDetails() {
       <TextField
         multiline
         rows={3}
+        name="description"
         id="description"
         label="Коментар або текст на записці"
         slotProps={{ htmlInput: { maxLength: 40 } }}

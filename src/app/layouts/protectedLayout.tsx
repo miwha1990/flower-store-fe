@@ -12,8 +12,8 @@ export const ProtectedLayout = ({
 }: ProtectedRouteProps) => {
   const token = getCookie('API_TOKEN');
   const { user } = useContext(UserContext);
-  
-  if (!token || user?.type !== 'owner') {
+
+  if (!token || user?.type !== 'ADMIN') {
     return <Navigate to={redirectPath} replace />;
   }
 

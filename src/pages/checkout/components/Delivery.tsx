@@ -1,19 +1,45 @@
+import { useAppStore } from '@/app/App';
 import { GoogleSearchInput } from '@/widgets/GoogleSearchInput/GoogleSearchInput';
-import { Stack, FormControlLabel, Switch, Typography, Link } from '@mui/material';
-import { useState } from 'react';
+import {
+  FormControlLabel,
+  Link,
+  Stack,
+  Switch,
+  Typography,
+} from '@mui/material';
+import { useEffect, useState } from 'react';
 
 export function Delivery() {
   const [self, setSelf] = useState(false);
+  const updateDeliveryAddress = useAppStore(
+    (state) => state.updateDeliveryAddress
+  );
+  const deliveryAddress = useAppStore((state) => state.deliveryAddress);
+
+  useEffect(() => {
+    if (self) {
+      updateDeliveryAddress('Самовивіз');
+    }
+  }, [self, updateDeliveryAddress]);
   return (
-    <Stack flexDirection="column" sx={{mt: 2}}>
+    <Stack flexDirection="column" sx={{ mt: 2 }}>
       <FormControlLabel
-        control={<Switch checked={self} onChange={(_e, v) => setSelf(v)} />}
+        control={
+          <Switch checked={self} onChange={(_e, value) => setSelf(value)} />
+        }
         label="Самовивіз"
+        sx={{ mb: 2, alignSelf: 'flex-start' }}
       />
       {!self ? (
         <GoogleSearchInput
-          onPlaceSelect={(v) => console.log(v)}
+          name="delivery_address"
+          onPlaceSelect={(place) => {
+            updateDeliveryAddress(place?.formattedAddress ?? '');
+          }}
           label="Адреса доставки"
+          defaultValue={
+            deliveryAddress === 'Самовивіз' ? '' : deliveryAddress || ''
+          }
         />
       ) : (
         <Typography variant="body1">

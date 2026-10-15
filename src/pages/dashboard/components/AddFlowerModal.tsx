@@ -127,7 +127,9 @@ export function AddFlowerModal({
               <Grid size={6}>
                 <Box>
                   <Input
-                    slotProps={{ input: { accept: 'image/*', type: 'file' } }}
+                    slotProps={{
+                      input: { accept: 'image/*,.webp', type: 'file' },
+                    }}
                     name="file"
                     onChange={(event) => {
                       const file = (event.currentTarget as HTMLInputElement)

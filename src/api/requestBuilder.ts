@@ -20,18 +20,16 @@ export interface RequestOptions {
 interface Request {
   method: HTTPMethod;
   url: string;
-  body?: JsonBody;
+  body?: JsonBody | FormData;
 }
 
 const buildRequest = (request: Request) => {
   const { body, method, url } = request;
-  const contentType =
-    body instanceof FormData ? 'multipart/form-data' : 'application/json';
   const API_TOKEN = getCookie('API_TOKEN');
   const API_HOST_URL = import.meta.env.VITE_API_URL;
 
   const headers = {
-    'content-type': contentType,
+    ...(body instanceof FormData ? {} : { 'content-type': 'application/json' }),
     Authorization: `Bearer ${API_TOKEN}`,
   };
 
@@ -85,20 +83,19 @@ export const makeRequest = async <T>(
 
         if (![401, 403, 500].includes(error?.response?.status)) {
           console.error(
-            `error: ${JSON.stringify(error.response?.data?.error)} url: ${
-              error.response?.request?.responseURL
+            `error: ${JSON.stringify(error.response?.data?.error)} url: ${error.response?.request?.responseURL
             }`
           );
         }
 
-        if(error?.response?.status === 401) {
+        if (error?.response?.status === 401) {
           localStorage.removeItem('user');
           removeCookie('API_TOKEN');
           window.location.replace('/login');
         }
 
         if (hasRedirectTo404) {
-          window.location.replace('/404');
+          // window.location.replace('/404');
         } else {
           reject(formatError(error));
         }

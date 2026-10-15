@@ -7,7 +7,7 @@ type RequestMethod = <T>(
     config?: RequestOptions,
 ) => (url: string, body?: RequestBody) => Promise<AxiosResponse<{data: T}>>;
 
-type RequestType = <T>(url: string, body?: JsonBody) => Promise<T>
+type RequestType = <T>(url: string, body?: RequestBody) => Promise<T>
 interface ApiWrapper {
     get: RequestType;
     post: RequestType;

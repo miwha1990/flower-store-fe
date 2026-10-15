@@ -13,7 +13,7 @@ import '@fontsource/roboto/500.css';
 import '@fontsource/roboto/700.css';
 import { useUser, UserContext } from './useUser';
 import { create } from 'zustand'
-import {AppState, AppStateI} from './store';
+import { AppState, AppStateI } from './store';
 
 export const useAppStore = create<AppStateI>()(AppState)
 // Create a client

@@ -1,5 +1,6 @@
 export type Flower = {
     id: number;
+    itemId: number;
     name: string;
     color: string;
     price: number;

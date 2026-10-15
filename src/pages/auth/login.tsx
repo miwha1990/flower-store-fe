@@ -1,11 +1,11 @@
-import { useActionState, useContext, useEffect } from 'react';
-import { Navigate } from 'react-router';
-import { Stack, TextField, Typography, useColorScheme } from '@mui/material';
-import { SubmitButton } from '@/shared/SubmitButton';
-import { StyledBox } from '@/shared/StyledBox';
+import { UserContext } from '@/app/useUser';
 import { AuthService } from '@/entities/auth/AuthService';
 import { useErrorNotification } from '@/shared/hooks/useErrorNotification';
-import { UserContext } from '@/app/useUser';
+import { StyledBox } from '@/shared/StyledBox';
+import { SubmitButton } from '@/shared/SubmitButton';
+import { Stack, TextField, Typography, useColorScheme } from '@mui/material';
+import { useActionState, useContext, useEffect } from 'react';
+import { Navigate } from 'react-router';
 
 export default function Login() {
   const { mode } = useColorScheme();
@@ -15,7 +15,7 @@ export default function Login() {
   });
   useErrorNotification(state.error?.message);
   const { setUser } = useContext(UserContext);
-  
+
   useEffect(() => {
     if (state.data) {
       setUser(state.data);
@@ -23,13 +23,13 @@ export default function Login() {
   }, [state.data])
 
   if (state.data) {
-    return state.data.type === 'owner' ? (
+    return state.data.type === 'ADMIN' ? (
       <Navigate to={'/dashboard'} replace />
     ) : (
       <Navigate to={'/'} replace />
     );
   }
-  
+
 
   return (
     <StyledBox

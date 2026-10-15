@@ -1,6 +1,6 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
+import { defineConfig } from 'vite';
 
 type ViteConfigProps = {
   mode: string;
@@ -15,6 +15,7 @@ export default ({ mode }: ViteConfigProps) => {
   return defineConfig({
     assetsInclude: [
       '**/*.JPG',
+      '**/*.webp',
       '**/*.jpg',
       '**/*.jpeg',
       '**/*.png',

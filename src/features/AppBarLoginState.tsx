@@ -1,17 +1,17 @@
+import { UserContext } from '@/app/useUser';
+import LogoutIcon from '@mui/icons-material/Logout';
 import {
-  Typography,
-  IconButton,
-  Stack,
-  MenuItem,
   Button,
+  IconButton,
+  MenuItem,
+  Stack,
+  Typography,
   useColorScheme,
   useTheme,
 } from '@mui/material';
-import LogoutIcon from '@mui/icons-material/Logout';
-import { removeCookie } from 'react-use-cookie';
-import { useNavigate, Link } from 'react-router';
-import { UserContext } from '@/app/useUser';
 import { useContext } from 'react';
+import { Link, useNavigate } from 'react-router';
+import { removeCookie } from 'react-use-cookie';
 
 const LoggedState = ({
   name,
@@ -25,7 +25,7 @@ const LoggedState = ({
   color: string;
 }) => (
   <Stack sx={{ color }} direction="row" spacing={2} alignItems={'center'}>
-    {type === 'owner' && (
+    {type === 'ADMIN' && (
       <Link to="/dashboard">
         <Button variant="contained">Адмінка</Button>
       </Link>
