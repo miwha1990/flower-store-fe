@@ -142,7 +142,6 @@ const PlaceAutocomplete = ({
         if (reason === 'input') {
           setSearchEnabled(true);
           setPredictions([]);
-          onPlaceSelect(null);
         } else {
           setSearchEnabled(false);
         }

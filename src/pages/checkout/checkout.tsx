@@ -39,7 +39,6 @@ export function Checkout() {
     })
   );
   const changeDeliveryAddress = (address: string) => {
-    debugger;
     setDeliveryAddress(address);
     store.updateDeliveryAddress(address);
   };
