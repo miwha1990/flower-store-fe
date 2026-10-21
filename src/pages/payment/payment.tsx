@@ -1,7 +1,6 @@
-import { useAppStore } from '@/app/App';
-import { calculateTotal } from '@/shared/utils';
 import GooglePayButton from '@google-pay/button-react';
 import {
+  Alert,
   List,
   ListItem,
   ListItemText,
@@ -9,13 +8,15 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-// import { ApplePayButton } from './components/ApplePayButton';
 import { OrdersService } from '@/entities/orders/OrdersService';
-import { Order } from '@/shared/types/Order';
+import type { Order } from '@/shared/types/Order';
 import Grid from '@mui/material/Grid2';
 import { useQuery } from '@tanstack/react-query';
-import { ApplePayButton } from 'react-apple-pay-button';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router';
+import { ApplePayButton } from './components/ApplePayButton';
+
+const DELIVERY_FEE = 200;
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('uk-UA', {
@@ -24,48 +25,13 @@ const formatPrice = (price: number) =>
     maximumFractionDigits: 2,
   }).format(price);
 
-const isAvailable = (): boolean => {
-  const ApplePay = ApplePaySession;
-  return Boolean(ApplePay) && ApplePay.canMakePayments();
-};
-const paymentRequest = {
-  apiVersion: 2,
-  apiVersionMinor: 0,
-  allowedPaymentMethods: [
-    {
-      type: 'CARD',
-      parameters: {
-        allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
-        allowedCardNetworks: ['MASTERCARD', 'VISA'],
-      },
-      tokenizationSpecification: {
-        type: 'PAYMENT_GATEWAY',
-        parameters: {
-          gateway: 'example',
-        },
-      },
-    },
-  ],
-  merchantInfo: {
-    merchantId: '12345678901234567890',
-    merchantName: 'Demo Merchant',
-  },
-  transactionInfo: {
-    totalPriceStatus: 'FINAL',
-    totalPriceLabel: 'Total',
-    totalPrice: '100.00',
-    currencyCode: 'USD',
-    countryCode: 'US',
-  },
-};
 export function Payment() {
-  const appStore = useAppStore();
   const [searchParams] = useSearchParams();
   const orderId = searchParams.get('orderId');
-  const orders = [...appStore.bucketItems.entries()];
-  const total = calculateTotal(orders);
+  const [paymentMessage, setPaymentMessage] = useState<string | null>(null);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
-  const { data } = useQuery<Order>({
+  const { data, error, isLoading } = useQuery<Order>({
     queryKey: ['order', orderId],
     queryFn: () => {
       if (!orderId) {
@@ -77,7 +43,44 @@ export function Payment() {
   });
   const orderTotal = data
     ? data.items.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
-    : total;
+    : 0;
+  const totalDue = orderTotal + DELIVERY_FEE;
+  const paymentRequest = {
+    apiVersion: 2,
+    apiVersionMinor: 0,
+    allowedPaymentMethods: [
+      {
+        type: 'CARD',
+        parameters: {
+          allowedAuthMethods: ['PAN_ONLY', 'CRYPTOGRAM_3DS'],
+          allowedCardNetworks: ['MASTERCARD', 'VISA'],
+        },
+        tokenizationSpecification: {
+          type: 'PAYMENT_GATEWAY',
+          parameters: {
+            gateway: 'example',
+            gatewayMerchantId: 'exampleGatewayMerchantId',
+          },
+        },
+      },
+    ],
+    merchantInfo: {
+      merchantId: '12345678901234567890',
+      merchantName: 'Flower Store (Test)',
+    },
+    transactionInfo: {
+      totalPriceStatus: 'FINAL',
+      totalPriceLabel: 'Flower Store order',
+      totalPrice: totalDue.toFixed(2),
+      currencyCode: 'UAH',
+      countryCode: 'UA',
+    },
+  } satisfies google.payments.api.PaymentDataRequest;
+
+  const showPaymentError = (message: string) => {
+    setPaymentMessage(null);
+    setPaymentError(message);
+  };
 
   return (
     <Grid container spacing={2} justifyContent={'center'}>
@@ -111,32 +114,73 @@ export function Payment() {
           </Stack>
           <Stack sx={{ mb: 1 }} direction="row" justifyContent="space-between">
             <Typography variant="h6">Доставка:</Typography>
-            <Typography variant="h6">{formatPrice(200)}</Typography>
+            <Typography variant="h6">{formatPrice(DELIVERY_FEE)}</Typography>
           </Stack>
           <Stack sx={{ mb: 2 }} direction="row" justifyContent="space-between">
             <Typography variant="h5">Всього до сплати:</Typography>
             <Typography variant="h5">
-              <b>{formatPrice(orderTotal + 200)}</b>
+              <b>{formatPrice(totalDue)}</b>
             </Typography>
           </Stack>
-          <lp-provider lp-data="your_data" lp-signature="your_signature">
-            <lp-apple-pay mode="black"></lp-apple-pay>
-          </lp-provider>
-          <lp-provider lp-data="your_data" lp-signature="your_signature">
-            <lp-privat24-pay mode="black"></lp-privat24-pay>
-          </lp-provider>
-          <GooglePayButton
-            buttonColor="black"
-            environment="TEST"
-            paymentRequest={paymentRequest}
-            onLoadPaymentData={(data) => {
-              console.log('load payment data', data);
-            }}
-            style={{ width: 300, height: 40 }}
-          />
-          <ApplePayButton onClick={() => console.log('f')} theme="light">
-            {'Subscribe with'}
-          </ApplePayButton>
+          {isLoading && <Typography>Завантажуємо замовлення…</Typography>}
+          {error && (
+            <Alert severity="error">
+              Не вдалося завантажити замовлення для оплати.
+            </Alert>
+          )}
+          {paymentError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {paymentError}
+            </Alert>
+          )}
+          {paymentMessage && (
+            <Alert severity="success" sx={{ mb: 2 }}>
+              {paymentMessage}
+            </Alert>
+          )}
+          {data && orderId && (
+            <Stack spacing={2} alignItems="center">
+              <GooglePayButton
+                buttonColor="black"
+                buttonType="pay"
+                environment="TEST"
+                paymentRequest={paymentRequest}
+                onPaymentAuthorized={async () => {
+                  setPaymentError(null);
+                  setPaymentMessage(
+                    'Google Pay TEST payment authorized. No charge was processed.'
+                  );
+                  return { transactionState: 'SUCCESS' };
+                }}
+                onCancel={() => {
+                  setPaymentMessage(null);
+                  setPaymentError(null);
+                }}
+                onError={(paymentError) =>
+                  showPaymentError(
+                    paymentError instanceof Error
+                      ? paymentError.message
+                      : paymentError.statusMessage
+                  )
+                }
+                style={{ width: 300, height: 48 }}
+              />
+              <ApplePayButton
+                amount={totalDue}
+                orderId={orderId}
+                onError={showPaymentError}
+                onPaymentAuthorized={() => {
+                  setPaymentError(null);
+                  setPaymentMessage(
+                    'Apple Pay test payment authorized by the sandbox.'
+                  );
+                }}
+              />
+              <Typography variant="caption" color="text.secondary">
+                Тестовий режим: реальне списання коштів не виконується.
+              </Typography>
+            </Stack>
+          )}
         </Paper>
       </Grid>
     </Grid>

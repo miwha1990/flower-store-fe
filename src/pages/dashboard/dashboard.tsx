@@ -1,19 +1,21 @@
-import { lazy, useMemo, useState, useContext } from 'react';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import AccountCircle from '@mui/icons-material/AccountCircle';
-import ListSharp from '@mui/icons-material/ListSharp';
-import ArrowBack from '@mui/icons-material/ArrowBack';
-import { AppProvider } from '@toolpad/core/AppProvider';
-import { DashboardLayout } from '@toolpad/core/DashboardLayout';
-import type { Navigation, Router, Session } from '@toolpad/core/AppProvider';
 import theme from '@/app/theme';
+import { UserContext } from '@/app/useUser.ts';
 import LogoDark from '@/assets/dark-logo.png';
 import LogoLight from '@/assets/light-logo.png';
-import { SidebarFooter } from './components/SideBarFooter.tsx';
-import { UserContext } from '@/app/useUser.ts';
-import { removeCookie } from 'react-use-cookie';
+import OrdersTab from '@/pages/dashboard/components/OrdersTab.tsx';
+import UsersTab from '@/pages/dashboard/components/UsersTab.tsx';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import ArrowBack from '@mui/icons-material/ArrowBack';
+import DashboardIcon from '@mui/icons-material/Dashboard';
+import ListSharp from '@mui/icons-material/ListSharp';
 import { useColorScheme } from '@mui/material/styles';
-import { Navigate } from 'react-router';
+import type { Navigation, Router, Session } from '@toolpad/core/AppProvider';
+import { AppProvider } from '@toolpad/core/AppProvider';
+import { DashboardLayout } from '@toolpad/core/DashboardLayout';
+import { lazy, useContext, useMemo } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router';
+import { removeCookie } from 'react-use-cookie';
+import { SidebarFooter } from './components/SideBarFooter.tsx';
 
 const FlowersTab = lazy(() => import('./components/FlowersTab.tsx'));
 
@@ -45,11 +47,11 @@ function PageContent({ pathname }: { pathname: string }) {
     case '/flowers':
       return <FlowersTab />;
     case '/orders':
-      return <h1>Orders</h1>;
+      return <OrdersTab />;
     case '/users':
-      return <h1>Users</h1>;
+      return <UsersTab />;
     default:
-      return <Navigate to={'/'} replace />;
+      return <Navigate to="/dashboard/flowers" replace />;
   }
 }
 
@@ -78,18 +80,36 @@ function Layout({ pathname }: { pathname: string }) {
 
 export function Dashboard() {
   const { user, setUser } = useContext(UserContext);
-  const [pathname, setPathname] = useState('/flowers');
+  const location = useLocation();
+  const navigate = useNavigate();
+  const pathname =
+    location.pathname === '/dashboard'
+      ? '/flowers'
+      : location.pathname.startsWith('/dashboard/')
+        ? location.pathname.slice('/dashboard'.length)
+        : '/flowers';
+
   const router = useMemo<Router>(() => {
     return {
       pathname,
-      searchParams: new URLSearchParams(),
-      navigate: (path) => setPathname(String(path)),
+      searchParams: new URLSearchParams(location.search),
+      navigate: (path, options) => {
+        const destination = new URL(path, window.location.origin);
+        const nextPath =
+          destination.pathname === '/store'
+            ? '/'
+            : `/dashboard${destination.pathname}`;
+        navigate(
+          { pathname: nextPath, search: destination.search },
+          { replace: options?.history === 'replace' }
+        );
+      },
     };
-  }, [pathname]);
+  }, [location.search, navigate, pathname]);
 
   const authentication = useMemo(() => {
     return {
-      signIn: () => {},
+      signIn: () => { },
       signOut: () => {
         localStorage.removeItem('user');
         setUser(null);
@@ -107,7 +127,11 @@ export function Dashboard() {
       authentication={authentication}
       session={user ? ({ user } as unknown as Session) : null}
     >
-      <Layout pathname={pathname} />
+      {location.pathname === '/dashboard' ? (
+        <Navigate to="/dashboard/flowers" replace />
+      ) : (
+        <Layout pathname={pathname} />
+      )}
     </AppProvider>
   );
 }

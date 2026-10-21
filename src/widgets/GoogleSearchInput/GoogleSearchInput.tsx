@@ -6,18 +6,27 @@ const API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY ?? 'YOUR_API_KEY';
 
 interface PlaceAutocompleteProps {
   onPlaceSelect: (place: google.maps.places.Place | null) => void;
+  onInputValueChange?: (value: string) => void;
   label?: string;
   defaultValue?: string;
+  value?: string;
+  disabled?: boolean;
   name: string;
 }
 
 const PlaceAutocomplete = ({
   onPlaceSelect,
+  onInputValueChange,
   label,
   defaultValue,
+  value,
+  disabled = false,
   name
 }: PlaceAutocompleteProps) => {
-  const [inputValue, setInputValue] = useState(defaultValue ?? '');
+  const [uncontrolledInputValue, setUncontrolledInputValue] = useState(
+    defaultValue ?? ''
+  );
+  const inputValue = value ?? uncontrolledInputValue;
   const [searchEnabled, setSearchEnabled] = useState(false);
   const [predictions, setPredictions] = useState<
     google.maps.places.PlacePrediction[]
@@ -27,8 +36,17 @@ const PlaceAutocomplete = ({
   const places = useMapsLibrary('places');
 
   useEffect(() => {
-    setInputValue(defaultValue ?? '');
-  }, [defaultValue]);
+    if (value === undefined) {
+      setUncontrolledInputValue(defaultValue ?? '');
+    }
+  }, [defaultValue, value]);
+
+  const updateInputValue = (nextValue: string) => {
+    if (value === undefined) {
+      setUncontrolledInputValue(nextValue);
+    }
+    onInputValueChange?.(nextValue);
+  };
 
   useEffect(() => {
     const term = inputValue.trim();
@@ -94,7 +112,7 @@ const PlaceAutocomplete = ({
         fields: ['formattedAddress', 'location', 'displayName'],
       });
       onPlaceSelect(place);
-      setInputValue(place.formattedAddress ?? prediction.text.text);
+      updateInputValue(place.formattedAddress ?? prediction.text.text);
       setPredictions([]);
     } catch (placeError) {
       setError(
@@ -107,6 +125,7 @@ const PlaceAutocomplete = ({
 
   return (
     <Autocomplete
+      disabled={disabled}
       options={predictions}
       inputValue={inputValue}
       loading={loading}
@@ -119,7 +138,7 @@ const PlaceAutocomplete = ({
           : 'Адресу не знайдено'
       }
       onInputChange={(_event, value, reason) => {
-        setInputValue(value);
+        updateInputValue(value);
         if (reason === 'input') {
           setSearchEnabled(true);
           setPredictions([]);
@@ -157,8 +176,11 @@ const PlaceAutocomplete = ({
 
 export const GoogleSearchInput = ({
   onPlaceSelect,
+  onInputValueChange,
   label,
   defaultValue,
+  value,
+  disabled,
   name
 }: PlaceAutocompleteProps) => {
   return (
@@ -167,7 +189,10 @@ export const GoogleSearchInput = ({
         name={name}
         label={label}
         onPlaceSelect={onPlaceSelect}
+        onInputValueChange={onInputValueChange}
         defaultValue={defaultValue}
+        value={value}
+        disabled={disabled}
       />
     </APIProvider>
   );

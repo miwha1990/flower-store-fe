@@ -1,4 +1,11 @@
-export type OrderItem = { itemId: number; quantity: number, item: any, unitPrice: number };
+import type { Flower } from './Flower';
+
+export type OrderItem = {
+  itemId: number;
+  quantity: number;
+  item: Flower;
+  unitPrice: number;
+};
 export enum OrderStatus {
 	PENDING = "PENDING",
 	PAID = "PAID",

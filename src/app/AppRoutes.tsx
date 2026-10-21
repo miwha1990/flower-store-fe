@@ -14,7 +14,7 @@ export default function AppRoutes() {
         <Route path="/payment" element={<Payment />} />
       </Route>
       <Route element={<ProtectedLayout />}>
-        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/dashboard/*" element={<Dashboard />} />
       </Route>
       <Route element={<AuthLayout />}>
         <Route path="login" element={<Login />} />

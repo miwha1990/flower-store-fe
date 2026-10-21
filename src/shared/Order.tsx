@@ -1,4 +1,3 @@
-import { useAppStore } from '@/app/App';
 import DeleteIcon from '@mui/icons-material/DeleteOutlined';
 import {
   Avatar,
@@ -11,63 +10,78 @@ import {
   Typography,
 } from '@mui/material';
 import { NumberField } from './NumberField/NumberField';
-import { Flower } from './types/Flower';
-import { calculateTotal } from './utils';
+import type { OrderItem } from './types/Order';
 
-export function Order({ maxHeight }: { maxHeight?: number }) {
-  const appStore = useAppStore();
-  const orders = [...appStore.bucketItems.entries()];
-  console.log(orders, 'orders');
+type OrderProps = {
+  items: OrderItem[];
+  onQuantityChange: (itemId: number, quantity: number) => void;
+  onRemoveItem?: (itemId: number) => void;
+  maxHeight?: number;
+  readOnly?: boolean;
+};
+
+export function Order({
+  items,
+  onQuantityChange,
+  onRemoveItem,
+  maxHeight,
+  readOnly = false,
+}: OrderProps) {
+  const total = items.reduce(
+    (sum, item) => sum + item.unitPrice * item.quantity,
+    0
+  );
+
   return (
     <>
       <List sx={maxHeight ? { maxHeight, overflow: 'auto', mb: 1 } : { mb: 1 }}>
-        {orders.map(([flower, amount]: [Flower, number]) => (
+        {items.map(orderItem => (
           <ListItem
-            key={flower.id}
+            key={orderItem.itemId}
             sx={{ pl: 0 }}
             secondaryAction={
-              <IconButton
-                edge="end"
-                aria-label="delete"
-                onClick={() => appStore.removeBucketItem(flower)}
-              >
-                <DeleteIcon />
-              </IconButton>
+              onRemoveItem && !readOnly ? (
+                <IconButton
+                  edge="end"
+                  aria-label="delete"
+                  onClick={() => onRemoveItem(orderItem.itemId)}
+                >
+                  <DeleteIcon />
+                </IconButton>
+              ) : undefined
             }
           >
-            <ListItemAvatar>
-              <Avatar src={flower.imageSrc} />
-            </ListItemAvatar>
+            {orderItem.item.imageSrc && <ListItemAvatar>
+              <Avatar src={orderItem.item.imageSrc} />
+            </ListItemAvatar>}
             <Stack
-              direction={'row'}
-              justifyContent={'space-between'}
-              alignItems={'center'}
+              direction="row"
+              justifyContent="space-between"
+              alignItems="center"
               sx={{ width: '100%' }}
             >
               <ListItemText
-                primary={flower.name}
+                primary={orderItem.item.name}
                 secondary={
                   <Typography variant="body1" fontWeight="bold" component="span">
-                    {flower.price} грн.
+                    {orderItem.unitPrice} грн.
                   </Typography>
                 }
               />
               <NumberField
-                onChange={(value) =>
-                  appStore.changeBucketItem({
-                    item: flower,
-                    amount: value,
-                  })
+                value={orderItem.quantity}
+                onChange={quantity =>
+                  onQuantityChange(orderItem.itemId, quantity)
                 }
-                max={flower.amount}
-                defaultValue={amount}
+                max={orderItem.item.amount}
+                disabled={readOnly}
               />
             </Stack>
           </ListItem>
         ))}
       </List>
-      <Typography variant="h6" fontWeight={'bold'}>
-        Всього: {calculateTotal(orders)} грн.
+      <Typography variant="h6" fontWeight="bold">
+        Всього: {total} грн.
       </Typography>
     </>
   );

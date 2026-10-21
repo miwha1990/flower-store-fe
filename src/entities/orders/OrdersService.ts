@@ -56,14 +56,7 @@ export class OrdersService {
       }
     };
   }
-  static editOrder(id: number) {
-    return async (prevState: any, status: OrderStatus) => {
-      try {
-        const response = await API.patch<Order>('orders/' + id, { status });
-        return { data: response, error: null };
-      } catch (error: unknown) {
-        return { ...prevState, error: error };
-      }
-    };
+  static editOrder(id: number, status: OrderStatus) {
+    return API.patch<Order>(`orders/${id}`, { status });
   }
 }

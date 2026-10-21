@@ -1,4 +1,3 @@
-import { useAppStore } from '@/app/App';
 import { GoogleSearchInput } from '@/widgets/GoogleSearchInput/GoogleSearchInput';
 import {
   FormControlLabel,
@@ -7,39 +6,50 @@ import {
   Switch,
   Typography,
 } from '@mui/material';
-import { useEffect, useState } from 'react';
 
-export function Delivery() {
-  const [self, setSelf] = useState(false);
-  const updateDeliveryAddress = useAppStore(
-    (state) => state.updateDeliveryAddress
-  );
-  const deliveryAddress = useAppStore((state) => state.deliveryAddress);
+const PICKUP_ADDRESS = 'Самовивіз';
 
-  useEffect(() => {
-    if (self) {
-      updateDeliveryAddress('Самовивіз');
-    }
-  }, [self, updateDeliveryAddress]);
+type DeliveryProps = {
+  address: string;
+  onAddressChange: (address: string) => void;
+  disabled?: boolean;
+};
+
+export function Delivery({
+  address,
+  onAddressChange,
+  disabled = false,
+}: DeliveryProps) {
+  const isPickup = address === PICKUP_ADDRESS;
+
   return (
     <Stack flexDirection="column" sx={{ mt: 2 }}>
+      {isPickup && (
+        <input type="hidden" name="delivery_address" value={address} />
+      )}
       <FormControlLabel
         control={
-          <Switch checked={self} onChange={(_e, value) => setSelf(value)} />
+          <Switch
+            checked={isPickup}
+            disabled={disabled}
+            onChange={(_event, value) =>
+              onAddressChange(value ? PICKUP_ADDRESS : '')
+            }
+          />
         }
         label="Самовивіз"
         sx={{ mb: 2, alignSelf: 'flex-start' }}
       />
-      {!self ? (
+      {!isPickup ? (
         <GoogleSearchInput
           name="delivery_address"
-          onPlaceSelect={(place) => {
-            updateDeliveryAddress(place?.formattedAddress ?? '');
+          value={address}
+          disabled={disabled}
+          onInputValueChange={onAddressChange}
+          onPlaceSelect={place => {
+            onAddressChange(place?.formattedAddress ?? '');
           }}
           label="Адреса доставки"
-          defaultValue={
-            deliveryAddress === 'Самовивіз' ? '' : deliveryAddress || ''
-          }
         />
       ) : (
         <Typography variant="body1">

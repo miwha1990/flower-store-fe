@@ -2,41 +2,47 @@ import { IconButton } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import css from './NumberField.module.css';
-import { useState, ChangeEvent, useEffect } from 'react';
+import { ChangeEvent } from 'react';
 
 type NumberFieldProps = {
-  defaultValue?: number;
+  value: number;
   onChange?(v: number): void;
   max?: number;
+  disabled?: boolean;
 };
-export function NumberField({ defaultValue, onChange, max }: NumberFieldProps) {
-  const [value, setValue] = useState(defaultValue || 0);
+export function NumberField({
+  value,
+  onChange,
+  max,
+  disabled = false,
+}: NumberFieldProps) {
   const down = () => {
     if(value > 1) {
-      setValue((prev) => --prev);
+      onChange?.(value - 1);
     }
   }
   const up = () => {
-    if((max && value < max) || !max) {
-      setValue((prev) => ++prev);
+    if (max === undefined || value < max) {
+      onChange?.(value + 1);
     }
   }
 
-  useEffect(() => {
-    onChange?.(value)
-  }, [value]);
-
   return (
     <div className={css.textFieldWrapper}>
-      <IconButton className={css.buttonRight} onClick={up}>
+      <IconButton className={css.buttonRight} onClick={up} disabled={disabled}>
         <AddIcon fontSize="small" />
       </IconButton>
       <input
         className={css.numberField}
+        disabled={disabled}
         onChange={(e: ChangeEvent<HTMLInputElement>) => {
-          const isNumber = e.currentTarget.value.search(/[0-9]/) !== -1;
-          if (isNumber) {
-            setValue(+e.currentTarget.value);
+          const nextValue = Number(e.currentTarget.value);
+          if (
+            Number.isInteger(nextValue) &&
+            nextValue >= 1 &&
+            (max === undefined || nextValue <= max)
+          ) {
+            onChange?.(nextValue);
           }
         }}
         inputMode="numeric"
@@ -44,7 +50,7 @@ export function NumberField({ defaultValue, onChange, max }: NumberFieldProps) {
         value={value}
         pattern="[0-9]*"
       />
-      <IconButton className={css.buttonRight} onClick={down}>
+      <IconButton className={css.buttonRight} onClick={down} disabled={disabled}>
         <RemoveIcon fontSize="small" />
       </IconButton>
     </div>

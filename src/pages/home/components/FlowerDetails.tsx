@@ -2,11 +2,11 @@ import { useAppStore } from '@/app/App';
 import { Flower } from '@/shared/types/Flower';
 import {
   Box,
+  Button,
   Modal,
-  Typography,
   Stack,
   TextField,
-  Button,
+  Typography,
   useMediaQuery,
 } from '@mui/material';
 import { Dispatch, SetStateAction, useState } from 'react';
@@ -115,9 +115,7 @@ export function FlowerDetails({ open, onClose, flower }: FlowerDetailsProps) {
                 slotProps={{ htmlInput: { min: 1, max: flower.amount } }}
                 onChange={(e) => {
                   const value = +(e.target as HTMLInputElement).value;
-                  if (value < 1) {
-                    return setAmount(1);
-                  }
+
                   if (value > flower.amount) {
                     return setAmount(flower.amount);
                   }

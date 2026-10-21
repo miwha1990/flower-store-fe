@@ -1,80 +1,191 @@
-import './ApplePayButton.css'
+/// <reference types="applepayjs" />
 
-const paymentRequest = {
-    countryCode: "US",
-    currencyCode: "USD",
-    supportedNetworks: ["visa", "masterCard", "amex", "discover"],
-    merchantCapabilities: ["supports3DS"],
-    total: {
-      label: "Your Store",
-      amount: "10.00",
-    },
-  };
+import { API } from '@/api';
+import { Alert } from '@mui/material';
+import { Component, type ErrorInfo, type ReactNode } from 'react';
+import './ApplePayButton.css';
 
-const handleMerchantValidation = async (event, session, onValidationFailed) => {
-    try {
-      const response = await fetch("/validate-apple-pay", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ validationURL: event.validationURL }),
-      });
-      const merchantSession = await response.json();
-      session.completeMerchantValidation(merchantSession);
-    } catch (error) {
-      console.error("Merchant validation failed:", error);
-      onValidationFailed();
+type ApplePayButtonProps = {
+  amount: number;
+  orderId: string;
+  onError: (message: string) => void;
+  onPaymentAuthorized: () => void;
+};
+
+type ApplePayAuthorizationResponse = {
+  success: boolean;
+  message?: string;
+};
+
+type ApplePayMerchantSession = Record<string, unknown>;
+
+type ApplePayErrorBoundaryState = {
+  hasError: boolean;
+};
+
+class ApplePayErrorBoundary extends Component<
+  { children: ReactNode },
+  ApplePayErrorBoundaryState
+> {
+  state: ApplePayErrorBoundaryState = { hasError: false };
+
+  static getDerivedStateFromError(): ApplePayErrorBoundaryState {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    console.error('Apple Pay UI error:', error, errorInfo);
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <Alert severity="error">
+          Apple Pay could not be initialized. Please use another payment method.
+        </Alert>
+      );
     }
-  };
 
-const handlePaymentAuthorization = async (event, session, onPaymentAuthorized) => {
-    try {
-      const response = await fetch("/process-apple-pay", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          token: event.payment.token,
-          amount: 1000, // Amount in cents
-          currency: "USD",
-        }),
-      });
-      const result = await response.json();
-  
-      if (result.success) {
-        session.completePayment(ApplePaySession.STATUS_SUCCESS);
-        onPaymentAuthorized();
-      } else {
-        session.completePayment(ApplePaySession.STATUS_FAILURE);
-      }
-    } catch (error) {
-      console.error("Payment authorization failed:", error);
-      session.completePayment(ApplePaySession.STATUS_FAILURE);
+    return this.props.children;
+  }
+}
+
+const getErrorMessage = (error: unknown) => {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'message' in error
+  ) {
+    if (typeof error.message === 'string') {
+      return error.message;
     }
-  };
+    if (
+      Array.isArray(error.message) &&
+      error.message.every(message => typeof message === 'string')
+    ) {
+      return error.message.join('; ');
+    }
+  }
+  return 'Apple Pay payment failed.';
+};
 
-export const ApplePayButton = ({ onPaymentAuthorized, onValidationFailed }) => {
-    const handleClick = () => {
-      const session = new ApplePaySession(3, paymentRequest);
-  
-      session.onvalidatemerchant = (event) =>
-        handleMerchantValidation(event, session, onValidationFailed);
-  
-      session.onpaymentauthorized = (event) =>
-        handlePaymentAuthorization(event, session, onPaymentAuthorized);
-  
+function ApplePayButtonContent({
+  amount,
+  orderId,
+  onError,
+  onPaymentAuthorized,
+}: ApplePayButtonProps) {
+  const isHttpsPage =
+    typeof window !== 'undefined' && window.location.protocol === 'https:';
+  const isAvailable =
+    isHttpsPage &&
+    typeof ApplePaySession !== 'undefined' &&
+    ApplePaySession.canMakePayments();
+
+  const handleClick = () => {
+    if (!isHttpsPage) {
+      onError(
+        'Apple Pay requires an HTTPS URL. Localhost over HTTP is not supported for this payment session.'
+      );
+      return;
+    }
+
+    if (!isAvailable) {
+      onError('Apple Pay is not available in this browser or device.');
+      return;
+    }
+
+    try {
+      const session = new ApplePaySession(3, {
+        countryCode: 'UA',
+        currencyCode: 'UAH',
+        supportedNetworks: ['visa', 'masterCard'],
+        merchantCapabilities: ['supports3DS'],
+        total: {
+          label: 'Flower Store',
+          amount: amount.toFixed(2),
+          type: 'final',
+        },
+      });
+
+      session.onvalidatemerchant = async (event) => {
+        try {
+          const merchantSession = await API.post<ApplePayMerchantSession>(
+            'payments/apple-pay/test/merchant-session',
+            { validationURL: event.validationURL }
+          );
+          session.completeMerchantValidation(merchantSession);
+        } catch (error: unknown) {
+          session.abort();
+          onError(getErrorMessage(error));
+        }
+      };
+
+      session.onpaymentauthorized = async (event) => {
+        try {
+          const result = await API.post<ApplePayAuthorizationResponse>(
+            'payments/apple-pay/test/authorize',
+            {
+              orderId,
+              paymentToken: event.payment.token,
+            }
+          );
+
+          if (!result.success) {
+            session.completePayment(ApplePaySession.STATUS_FAILURE);
+            onError(
+              result.message ?? 'Apple Pay payment was not authorized.'
+            );
+            return;
+          }
+
+          session.completePayment(ApplePaySession.STATUS_SUCCESS);
+          onPaymentAuthorized();
+        } catch (error: unknown) {
+          session.completePayment(ApplePaySession.STATUS_FAILURE);
+          onError(getErrorMessage(error));
+        }
+      };
+
       session.begin();
-    };
-  
-    return (
-      <button
-        onClick={handleClick}
-        className="apple-pay-button-with-text apple-pay-button-black-with-text"
-      >
-        <span className="text">Pay with</span>
-        <span className="logo"></span>
-      </button>
-    );
+    } catch (error: unknown) {
+      onError(getErrorMessage(error));
+    }
   };
+
+  if (!isHttpsPage) {
+    return (
+      <p role="status">
+        Apple Pay requires an HTTPS URL. Use an HTTPS tunnel or a configured
+        local HTTPS server to test it.
+      </p>
+    );
+  }
+
+  if (!isAvailable) {
+    return null;
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="apple-pay-button-with-text apple-pay-button-black-with-text"
+      aria-label="Pay with Apple Pay"
+    >
+      <span className="text">Pay with</span>
+      <span className="logo" />
+    </button>
+  );
+}
+
+export function ApplePayButton(props: ApplePayButtonProps) {
+  return (
+    <ApplePayErrorBoundary>
+      <ApplePayButtonContent {...props} />
+    </ApplePayErrorBoundary>
+  );
+}
