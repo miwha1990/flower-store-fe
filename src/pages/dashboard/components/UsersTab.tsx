@@ -53,6 +53,8 @@ export default function UsersTab() {
     [deleting.isPending]
   );
 
+  console.log(data, 'data');
+
   return (
     <Box sx={{ height: 800, width: '100%' }}>
       <DataGrid

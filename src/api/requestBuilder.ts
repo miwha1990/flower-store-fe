@@ -80,6 +80,7 @@ export const makeRequest = async <T>(
           error.response &&
           error.response.status === 404 &&
           window.location.pathname !== '/404';
+        const isLoginRequest = /^\/?auth\/login(?:[/?#]|$)/.test(request.url);
 
         if (![401, 403, 500].includes(error?.response?.status)) {
           console.error(
@@ -88,14 +89,14 @@ export const makeRequest = async <T>(
           );
         }
 
-        if (error?.response?.status === 401) {
+        if (error?.response?.status === 401 && !isLoginRequest) {
           localStorage.removeItem('user');
           removeCookie('API_TOKEN');
           window.location.replace('/login');
         }
 
         if (hasRedirectTo404) {
-          // window.location.replace('/404');
+          window.location.replace('/404');
         } else {
           reject(formatError(error));
         }

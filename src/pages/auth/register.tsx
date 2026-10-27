@@ -1,10 +1,11 @@
-import { startTransition, useActionState } from 'react';
-import { useNavigate } from 'react-router';
-import { Stack, TextField, Typography, useColorScheme } from '@mui/material';
-import { SubmitButton } from '@/shared/SubmitButton';
-import { StyledBox } from '@/shared/StyledBox';
 import { AuthService } from '@/entities/auth/AuthService';
 import { useErrorNotification } from '@/shared/hooks/useErrorNotification';
+import { StyledBox } from '@/shared/StyledBox';
+import { SubmitButton } from '@/shared/SubmitButton';
+import { Stack, TextField, Typography, useColorScheme } from '@mui/material';
+import { MuiTelInput } from 'mui-tel-input';
+import { startTransition, useActionState, useState } from 'react';
+import { useNavigate } from 'react-router';
 
 export default function Register() {
   const { mode } = useColorScheme();
@@ -12,6 +13,9 @@ export default function Register() {
     data: null,
     error: null,
   });
+
+  const [phone, setPhone] = useState('');
+
 
   const navigate = useNavigate();
   useErrorNotification(
@@ -32,19 +36,20 @@ export default function Register() {
   return (
     <StyledBox
       sx={{
-        mt: 2,
+        mt: 5,
         bgcolor:
           mode === 'light' ? 'rgb(255 255 255 / 0.6)' : 'rgb(0 0 0 / 0.6)',
       }}
     >
       <form onSubmit={handleSubmit}>
-        <Stack direction="column" spacing={4} width="100%">
+        <Stack direction="column" spacing={3} width="100%">
           <Typography variant="h4">Sing in</Typography>
           <TextField
             type="email"
             id="email"
             name="email"
             label="Email"
+            autoComplete="email"
             fullWidth
             margin="normal"
             required
@@ -52,15 +57,30 @@ export default function Register() {
           <TextField
             id="name"
             name="name"
-            label="Name"
+            label="Им`я"
             fullWidth
             margin="normal"
             required
           />
+          <MuiTelInput
+            required
+            defaultCountry="UA"
+            value={phone}
+            onChange={(v) => {
+              if (v.toString().length < 17) {
+                setPhone(v);
+              }
+            }}
+            name="phone"
+            id="phone"
+            label="Телефон"
+          />
           <TextField
+            type="password"
             label="Create Password"
             id="password"
             name="password"
+            autoComplete="new-password"
             fullWidth
             slotProps={{
               htmlInput: {
@@ -72,10 +92,11 @@ export default function Register() {
             required
           />
           <TextField
-            type="text"
+            type="password"
             label="Repeat Password"
             id="password2"
             name="password2"
+            autoComplete="new-password"
             fullWidth
             slotProps={{
               htmlInput: {

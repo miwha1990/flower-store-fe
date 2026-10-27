@@ -46,6 +46,7 @@ export default function Login() {
             id="email"
             name="email"
             label="Email"
+            autoComplete="username"
             fullWidth
             margin="normal"
             required
@@ -55,6 +56,7 @@ export default function Login() {
             type="password"
             id="password"
             name="password"
+            autoComplete="current-password"
             fullWidth
             margin="normal"
             required

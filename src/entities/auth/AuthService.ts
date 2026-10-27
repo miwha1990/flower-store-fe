@@ -9,6 +9,7 @@ type LoginResponse = {
 export class AuthService {
   static async register(prevState: any, formData: any) {
     const email = formData.get('email');
+    const phone = formData.get('phone');
     const password = formData.get('password');
     const password2 = formData.get('password2');
     const name = formData.get('name');
@@ -16,7 +17,7 @@ export class AuthService {
       return { ...prevState, error: 'Passwords do not match' };
     }
     try {
-      await API.post('auth/register', { email, password, name });
+      await API.post('auth/register', { email, password, name, phone });
       return { data: "User created!", error: null };
     } catch (error: unknown) {
       return { ...prevState, error: error };
