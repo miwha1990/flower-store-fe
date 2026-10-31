@@ -1,9 +1,13 @@
 import { API } from '@/api';
-import { Flower } from '@/shared/types/Flower';
+import { Category, Flower } from '@/shared/types/Flower';
 
 export class FlowersService {
   static getFlowers() {
     return API.get<Flower[]>('flowers');
+  }
+
+  static getFlowersCategories() {
+    return API.get<Category[]>('flowers/categories');
   }
 
   static deleteFlower(id: string | number) {
