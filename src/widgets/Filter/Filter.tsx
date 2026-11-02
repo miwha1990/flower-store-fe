@@ -1,8 +1,12 @@
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import RefreshIcon from '@mui/icons-material/Refresh';
-import { alpha, Autocomplete, Box, Button, Paper, Slider, Stack, styled, TextField, Typography } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, alpha, Box, Button, Checkbox, Divider, FormControlLabel, Paper, Slider, Stack, styled, TextField, Typography } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useSearchParams } from 'react-router';
 
+import { FiltersResponse, FlowersService } from '@/entities/flowers/FlowersService';
+import { Flower } from '@/shared/types/Flower';
+import { useQuery } from '@tanstack/react-query';
 import css from './Filter.module.css';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -25,7 +29,7 @@ type FilterProps = {
 	filterData?: filterDataType;
 };
 export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
-	const { priceRange, color, category } = filterData;
+	const { priceRange } = filterData;
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [filter, setFilter] = useState<filterDataType>({});
 	const [sliderValue, setSliderValue] = useState<[number, number]>(priceRange || [20, 100]);
@@ -36,12 +40,30 @@ export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
 		}
 	};
 
+	const { data } = useQuery<{ items: Flower[]; filters: FiltersResponse }>({
+		queryKey: ['flowers/with-filters'],
+		queryFn: FlowersService.getFlowersWithFilters,
+		select: ({ items, filters }) => ({
+			items,
+			filters,
+		})
+	});
+
+	const { categories, colors, prices } = data?.filters || {};
+
+	useEffect(() => {
+		if (prices) setSliderValue(prices)
+	}, [prices])
+
+
 	useEffect(() => {
 		const timeoutId = window.setTimeout(() => {
-			setFilter((prev) => ({ ...prev, priceRange: sliderValue }));
+			if (JSON.stringify(sliderValue) !== JSON.stringify(prices)) {
+				setFilter((prev) => ({ ...prev, priceRange: sliderValue }));
+			}
 		}, 300);
 		return () => window.clearTimeout(timeoutId);
-	}, [sliderValue]);
+	}, [sliderValue, prices]);
 
 	const applyFilter = () => {
 		const params = new URLSearchParams(searchParams);
@@ -78,8 +100,8 @@ export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
 			</Stack>
 			<Box sx={{ px: 1 }}>
 				<Slider
-					min={20}
-					max={100}
+					min={(prices || [])[0] || 0}
+					max={(prices || [])[1] || 100}
 					valueLabelDisplay="auto"
 					disableSwap
 					value={sliderValue}
@@ -87,25 +109,86 @@ export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
 					aria-label="Price Range"
 				/>
 			</Box>
-			<Autocomplete
-				size="small"
-				disablePortal
-				options={category || []}
-				fullWidth
-				onChange={(_, value) => setFilter((prev) => ({ ...prev, category: value ? [value] : [] }))}
-				renderInput={(params) => <TextField {...params} label="Категорія" />}
-			/>
-			<Autocomplete
-				size="small"
-				disablePortal
-				options={color || []}
-				fullWidth
-				onChange={(_, value) => setFilter((prev) => ({ ...prev, color: value ? [value] : [] }))}
-				renderInput={(params) => <TextField {...params} label="Колір" />}
-			/>
+			<Divider />
+			<Accordion defaultExpanded disableGutters elevation={0} sx={{ background: 'transparent', '&:before': { display: 'none' } }}>
+				<AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+					<Typography>Категорія ({categories?.length ?? 0})</Typography>
+				</AccordionSummary>
+				<AccordionDetails sx={{ px: 0, py: 0 }}>
+					<Stack>
+						{categories?.map(({ id, name }) => {
+							const count = data?.items.filter((item) => item.category === name).length ?? 0;
+							return (
+								<FormControlLabel
+									key={id}
+									control={
+										<Checkbox
+											checked={filter.category?.includes(name) ?? false}
+											onChange={(event) => {
+												setFilter((prev) => {
+													const selected = prev.category ?? [];
+													return {
+														...prev,
+														category: event.target.checked
+															? [...selected, name]
+															: selected.filter((value) => value !== name),
+													};
+												});
+											}}
+										/>
+									}
+									label={`${name} (${count})`}
+								/>
+							);
+						})}
+					</Stack>
+				</AccordionDetails>
+			</Accordion>
+			<Divider />
+			<Accordion defaultExpanded disableGutters elevation={0} sx={{ background: 'transparent', '&:before': { display: 'none' } }}>
+				<AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ px: 0 }}>
+					<Typography>Колір ({colors?.length ?? 0})</Typography>
+				</AccordionSummary>
+				<AccordionDetails sx={{ px: 0, py: 0 }}>
+					<Stack>
+						{colors?.map(({ value, count }) => (
+							<FormControlLabel
+								key={value}
+								control={
+									<Checkbox
+										checked={filter.color?.includes(value) ?? false}
+										onChange={(event) => {
+											setFilter((prev) => {
+												const selected = prev.color ?? [];
+												return {
+													...prev,
+													color: event.target.checked
+														? [...selected, value]
+														: selected.filter((item) => item !== value),
+												};
+											});
+										}}
+									/>
+								}
+								label={
+									<Stack direction="row" spacing={1} alignItems="center">
+										<Box
+											role="img"
+											aria-label={value}
+											title={value}
+											sx={{ width: 18, height: 18, backgroundColor: value, border: '1px solid', borderColor: 'divider', borderRadius: 0.5 }}
+										/>
+										<Typography variant="body2">({count})</Typography>
+									</Stack>
+								}
+							/>
+						))}
+					</Stack>
+				</AccordionDetails>
+			</Accordion>
 			<Stack direction="row" spacing={1} alignItems="center">
-				<Button variant="contained" onClick={applyFilter}>Застосувати</Button>
-				<Button disabled={!Object.entries(filter).length} color="error" variant="outlined" onClick={() => setFilter(filterData)}>
+				<Button disabled={!Object.entries(filter).length} variant="contained" onClick={applyFilter}>Застосувати</Button>
+				<Button color="error" variant="outlined" onClick={() => setFilter(filterData)}>
 					<RefreshIcon />
 				</Button>
 			</Stack>

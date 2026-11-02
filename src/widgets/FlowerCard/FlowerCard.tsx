@@ -2,15 +2,15 @@ import { Flower } from '@/shared/types/Flower';
 import { alpha } from '@mui/material/styles';
 
 import {
-  Paper,
-  CardMedia,
-  CardContent,
-  Typography,
-  Stack,
   Box,
-  useTheme,
-  useMediaQuery,
   CardActionArea,
+  CardContent,
+  CardMedia,
+  Paper,
+  Stack,
+  Typography,
+  useMediaQuery,
+  useTheme,
 } from '@mui/material';
 import { Dispatch, SetStateAction } from 'react';
 import css from './FlowerCard.module.css';
@@ -29,6 +29,7 @@ export default function FlowerCard({
     <Paper
       elevation={3}
       sx={{
+        height: 'fit-content',
         width: isSmallMobile ? 160 : isMobile ? 180 : 200,
         backdropFilter: 'blur(4px)',
         backgroundColor: alpha(theme.palette.background.default, 0.6),
@@ -44,7 +45,7 @@ export default function FlowerCard({
           image={flower.imageSrc}
         />
         <CardContent>
-          <Stack direction="row"  alignItems={'center'} justifyContent="space-between">
+          <Stack direction="row" alignItems={'center'} justifyContent="space-between">
             <Typography className={css.flowerName} gutterBottom variant={isSmallMobile ? 'h6' : "h5"} component="div">
               {flower.name}
             </Typography>

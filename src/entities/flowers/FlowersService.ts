@@ -1,9 +1,18 @@
 import { API } from '@/api';
 import { Category, Flower } from '@/shared/types/Flower';
 
+export type FiltersResponse = {
+  colors: { value: string, count: number }[],
+  prices: [number, number],
+  categories: Category[]
+}
 export class FlowersService {
   static getFlowers() {
     return API.get<Flower[]>('flowers');
+  }
+
+  static getFlowersWithFilters() {
+    return API.get<{ items: Flower[], filters: FiltersResponse }>('flowers/with-filters');
   }
 
   static getFlowersCategories() {
