@@ -6,3 +6,8 @@
 	padding: 20px;
 	max-height: fit-content;
 }
+@media (max-width: 768px) {
+	.filterWrapper {
+		width: 100%;
+	}
+}

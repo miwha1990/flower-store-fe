@@ -17,7 +17,13 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 	boxShadow: theme.shadows[1],
 }));
 
-export const Filter = ({ filters }: { filters?: FiltersResponse }) => {
+type FilterProps = {
+	filters?: FiltersResponse;
+	onClose?: () => void;
+	fullWidth?: boolean;
+};
+
+export const Filter = ({ filters, onClose, fullWidth = false }: FilterProps) => {
 	const [searchParams, setSearchParams] = useSearchParams();
 	const [filter, setFilter] = useState<{ priceRange?: [number, number]; color?: string[]; category?: string[] }>({});
 	const [sliderValue, setSliderValue] = useState<[number, number]>([20, 100]);
@@ -82,6 +88,7 @@ export const Filter = ({ filters }: { filters?: FiltersResponse }) => {
 		}
 
 		setSearchParams(params);
+		onClose?.();
 	};
 
 	const resetFilter = () => {
@@ -93,11 +100,12 @@ export const Filter = ({ filters }: { filters?: FiltersResponse }) => {
 		setSearchParams(params);
 		setFilter({});
 		if (prices) setSliderValue(prices);
+		onClose?.();
 	};
 
 	return (
 
-		<StyledPaper className={css.filterWrapper}>
+		<StyledPaper className={css.filterWrapper} sx={fullWidth ? { width: '100%' } : undefined}>
 			<Typography component="label" variant="h6" sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
 				Фільтр
 			</Typography>
@@ -196,7 +204,7 @@ export const Filter = ({ filters }: { filters?: FiltersResponse }) => {
 				</AccordionDetails>
 			</Accordion>
 			<Stack direction="row" spacing={1} alignItems="center">
-				<Button disabled={!Object.entries(filter).length} variant="contained" onClick={applyFilter}>Застосувати</Button>
+				<Button disabled={!Object.entries(filter).length} variant="contained" sx={{ flex: 1 }} onClick={applyFilter}>Застосувати</Button>
 				<Button color="error" variant="outlined" onClick={resetFilter}>
 					<RefreshIcon />
 				</Button>

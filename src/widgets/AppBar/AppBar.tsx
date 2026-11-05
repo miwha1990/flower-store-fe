@@ -3,10 +3,11 @@ import LogoLight from '@/assets/light-logo.png';
 import AppBarLoginState from '@/features/AppBarLoginState';
 import ColorModeIconDropdown from '@/features/ColorModeIconDropdown/ColorModeIconDropdown';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import FilterListAltIcon from '@mui/icons-material/FilterAlt';
 import MenuIcon from '@mui/icons-material/Menu';
 import PhoneIcon from '@mui/icons-material/Phone';
 import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { Badge, useScrollTrigger } from '@mui/material';
+import { Badge, Stack, useScrollTrigger } from '@mui/material';
 import AppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
 import Container from '@mui/material/Container';
@@ -18,6 +19,7 @@ import { alpha, styled, useColorScheme } from '@mui/material/styles';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
+import { useLocation } from 'react-router';
 
 import { useAppStore } from '@/app/store';
 import { ShoppingCartDrawer } from '@/pages/home/components/ShopingCartDrawer';
@@ -44,6 +46,7 @@ export default function AppAppBar() {
   const { mode } = useColorScheme();
   const trigger = useScrollTrigger();
   const appStore = useAppStore();
+  const { pathname } = useLocation();
 
   const toggleDrawer = (newOpen: boolean) => () => {
     setOpen(newOpen);
@@ -95,6 +98,14 @@ export default function AppAppBar() {
             <ColorModeIconDropdown />
           </Box>
           <Box id="navbar-actions-buttons" sx={{ display: { xs: 'flex', md: 'none' }, gap: 1 }}>
+            {pathname === '/' && (
+              <IconButton
+                aria-label="Open filters"
+                onClick={() => appStore.toggleMobileFilter(true)}
+              >
+                <FilterListAltIcon />
+              </IconButton>
+            )}
             <Link href="tel:+3809912312312">
               <IconButton>
                 <Badge color="warning">
@@ -102,7 +113,6 @@ export default function AppAppBar() {
                 </Badge>
               </IconButton>
             </Link>
-            <ColorModeIconDropdown size="medium" />
             <IconButton
               disabled={!appStore.bucketItems.size}
               onClick={() => setOpenSideDrawer(true)}
@@ -137,6 +147,10 @@ export default function AppAppBar() {
                 </Box>
                 <Divider sx={{ my: 3 }} />
                 <AppBarLoginState isMobile />
+                <Stack spacing={2} direction="row" alignItems="center" sx={{ mt: 2 }} justifyContent="center">
+                  <ColorModeIconDropdown size="medium" />
+                  <Typography variant="body2">Тема</Typography>
+                </Stack>
               </Box>
             </Drawer>
           </Box>

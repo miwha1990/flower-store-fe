@@ -12,6 +12,8 @@ export interface AppStateI {
   removeBucketItem: (item: Flower) => void;
   changeBucketItem: (order: OrderItem) => void;
   clearCart: () => void;
+  mobileFilterOpen: boolean;
+  toggleMobileFilter: (open?: boolean) => void;
 }
 
 type SerializedAppState = {
@@ -58,6 +60,9 @@ export const AppState = persist<AppStateI, [], [], SerializedAppState>(
         return { bucketItems };
       }),
     clearCart: () => set({ bucketItems: new Map(), deliveryAddress: undefined }),
+    mobileFilterOpen: false,
+    toggleMobileFilter: (open) =>
+      set((state) => ({ mobileFilterOpen: open ?? !state.mobileFilterOpen })),
     updateDeliveryAddress: (address: string) =>
       set((state) => ({
         deliveryAddress: address,

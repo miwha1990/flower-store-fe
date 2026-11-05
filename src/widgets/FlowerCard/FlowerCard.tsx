@@ -30,7 +30,9 @@ export default function FlowerCard({
       elevation={3}
       sx={{
         height: 'fit-content',
-        width: isSmallMobile ? 160 : isMobile ? 180 : 200,
+        // width: isSmallMobile ? 160 : isMobile ? 180 : 200,
+        width: '200px',
+        maxWidth: 'calc(50% - 10px)',
         backdropFilter: 'blur(4px)',
         backgroundColor: alpha(theme.palette.background.default, 0.6),
         transition: 'all 0.2s',
