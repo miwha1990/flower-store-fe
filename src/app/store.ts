@@ -1,4 +1,5 @@
 import { Flower } from '@/shared/types/Flower';
+import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 type OrderItem = { item: Flower; amount: number };
@@ -10,6 +11,7 @@ export interface AppStateI {
   addBucketItem: (order: OrderItem) => void;
   removeBucketItem: (item: Flower) => void;
   changeBucketItem: (order: OrderItem) => void;
+  clearCart: () => void;
 }
 
 type SerializedAppState = {
@@ -55,6 +57,7 @@ export const AppState = persist<AppStateI, [], [], SerializedAppState>(
         bucketItems.set(order.item, order.amount);
         return { bucketItems };
       }),
+    clearCart: () => set({ bucketItems: new Map(), deliveryAddress: undefined }),
     updateDeliveryAddress: (address: string) =>
       set((state) => ({
         deliveryAddress: address,
@@ -77,3 +80,10 @@ export const AppState = persist<AppStateI, [], [], SerializedAppState>(
     },
   }
 );
+
+export const useAppStore = create<AppStateI>()(AppState);
+
+export const clearCartData = () => {
+  useAppStore.getState().clearCart();
+  useAppStore.persist.clearStorage();
+};

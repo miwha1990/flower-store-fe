@@ -4,9 +4,7 @@ import { Accordion, AccordionDetails, AccordionSummary, alpha, Box, Button, Chec
 import { useEffect, useState } from "react";
 import { useSearchParams } from 'react-router';
 
-import { FiltersResponse, FlowersService } from '@/entities/flowers/FlowersService';
-import { Flower } from '@/shared/types/Flower';
-import { useQuery } from '@tanstack/react-query';
+import { FiltersResponse } from '@/entities/flowers/FlowersService';
 import css from './Filter.module.css';
 
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -19,20 +17,10 @@ const StyledPaper = styled(Paper)(({ theme }) => ({
 	boxShadow: theme.shadows[1],
 }));
 
-type filterDataType = Partial<{
-	priceRange: [number, number];
-	color: string[];
-	category: string[];
-}>
-type FilterProps = {
-	onFilterChange: (filter: filterDataType) => void;
-	filterData?: filterDataType;
-};
-export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
-	const { priceRange } = filterData;
+export const Filter = ({ filters }: { filters?: FiltersResponse }) => {
 	const [searchParams, setSearchParams] = useSearchParams();
-	const [filter, setFilter] = useState<filterDataType>({});
-	const [sliderValue, setSliderValue] = useState<[number, number]>(priceRange || [20, 100]);
+	const [filter, setFilter] = useState<{ priceRange?: [number, number]; color?: string[]; category?: string[] }>({});
+	const [sliderValue, setSliderValue] = useState<[number, number]>([20, 100]);
 
 	const handleSliderChange = (_: Event, newValue: number | number[]) => {
 		if (Array.isArray(newValue)) {
@@ -40,16 +28,7 @@ export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
 		}
 	};
 
-	const { data } = useQuery<{ items: Flower[]; filters: FiltersResponse }>({
-		queryKey: ['flowers/with-filters'],
-		queryFn: FlowersService.getFlowersWithFilters,
-		select: ({ items, filters }) => ({
-			items,
-			filters,
-		})
-	});
-
-	const { categories, colors, prices } = data?.filters || {};
+	const { categories, colors, prices } = filters || {};
 
 	useEffect(() => {
 		if (prices) setSliderValue(prices)
@@ -64,6 +43,27 @@ export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
 		}, 300);
 		return () => window.clearTimeout(timeoutId);
 	}, [sliderValue, prices]);
+
+	// Apply filters from URL parameters
+	useEffect(() => {
+		const minPriceParam = searchParams.get('minPrice');
+		const maxPriceParam = searchParams.get('maxPrice');
+		const minPrice = minPriceParam === null ? NaN : Number(minPriceParam);
+		const maxPrice = maxPriceParam === null ? NaN : Number(maxPriceParam);
+		const hasPriceRange = Number.isFinite(minPrice) && Number.isFinite(maxPrice);
+		const nextFilter = {
+			category: searchParams.getAll('category'),
+			color: searchParams.getAll('color'),
+			...(hasPriceRange ? { priceRange: [minPrice, maxPrice] as [number, number] } : {}),
+		};
+
+		setFilter(nextFilter);
+		if (hasPriceRange) {
+			setSliderValue([minPrice, maxPrice]);
+		} else if (prices) {
+			setSliderValue(prices);
+		}
+	}, [searchParams, prices]);
 
 	const applyFilter = () => {
 		const params = new URLSearchParams(searchParams);
@@ -82,7 +82,17 @@ export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
 		}
 
 		setSearchParams(params);
-		onFilterChange(activeFilter);
+	};
+
+	const resetFilter = () => {
+		const params = new URLSearchParams(searchParams);
+		params.delete('color');
+		params.delete('category');
+		params.delete('minPrice');
+		params.delete('maxPrice');
+		setSearchParams(params);
+		setFilter({});
+		if (prices) setSliderValue(prices);
 	};
 
 	return (
@@ -116,8 +126,7 @@ export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
 				</AccordionSummary>
 				<AccordionDetails sx={{ px: 0, py: 0 }}>
 					<Stack>
-						{categories?.map(({ id, name }) => {
-							const count = data?.items.filter((item) => item.category === name).length ?? 0;
+						{categories?.map(({ id, name, count }) => {
 							return (
 								<FormControlLabel
 									key={id}
@@ -188,7 +197,7 @@ export const Filter = ({ onFilterChange, filterData = {} }: FilterProps) => {
 			</Accordion>
 			<Stack direction="row" spacing={1} alignItems="center">
 				<Button disabled={!Object.entries(filter).length} variant="contained" onClick={applyFilter}>Застосувати</Button>
-				<Button color="error" variant="outlined" onClick={() => setFilter(filterData)}>
+				<Button color="error" variant="outlined" onClick={resetFilter}>
 					<RefreshIcon />
 				</Button>
 			</Stack>

@@ -12,4 +12,5 @@ export type Flower = {
 export type Category = {
     id: number;
     name: string;
+    count: number;
 }

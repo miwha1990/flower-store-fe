@@ -1,4 +1,5 @@
 import theme from '@/app/theme';
+import { clearCartData } from '@/app/store';
 import { UserContext } from '@/app/useUser.ts';
 import LogoDark from '@/assets/dark-logo.png';
 import LogoLight from '@/assets/light-logo.png';
@@ -112,6 +113,7 @@ export function Dashboard() {
       signIn: () => { },
       signOut: () => {
         localStorage.removeItem('user');
+        clearCartData();
         setUser(null);
         removeCookie('API_TOKEN');
         window.location.reload();

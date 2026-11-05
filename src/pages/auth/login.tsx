@@ -13,14 +13,14 @@ export default function Login() {
     data: null,
     error: null,
   });
-  useErrorNotification(state.error?.message);
+  useErrorNotification(state.error);
   const { setUser } = useContext(UserContext);
 
   useEffect(() => {
     if (state.data) {
       setUser(state.data);
     }
-  }, [state.data])
+  }, [state.data, state.error])
 
   if (state.data) {
     return state.data.type === 'ADMIN' ? (

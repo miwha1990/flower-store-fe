@@ -6,13 +6,16 @@ export type FiltersResponse = {
   prices: [number, number],
   categories: Category[]
 }
+
 export class FlowersService {
   static getFlowers() {
     return API.get<Flower[]>('flowers');
   }
 
-  static getFlowersWithFilters() {
-    return API.get<{ items: Flower[], filters: FiltersResponse }>('flowers/with-filters');
+  static getFlowersWithFilters(query = '') {
+    return API.get<{ items: Flower[], filters: FiltersResponse }>(
+      `flowers/with-filters${query ? `?${query}` : ''}`,
+    );
   }
 
   static getFlowersCategories() {

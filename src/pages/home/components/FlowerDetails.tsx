@@ -1,4 +1,4 @@
-import { useAppStore } from '@/app/App';
+import { useAppStore } from '@/app/store';
 import { Flower } from '@/shared/types/Flower';
 import {
   Box,

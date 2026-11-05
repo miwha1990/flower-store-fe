@@ -1,4 +1,4 @@
-import { useAppStore } from '@/app/App';
+import { clearCartData, useAppStore } from '@/app/store';
 import { UserContext } from '@/app/useUser';
 import { OrdersService } from '@/entities/orders/OrdersService';
 import { useErrorNotification } from '@/shared/hooks/useErrorNotification';
@@ -58,6 +58,7 @@ export function Checkout() {
   useEffect(() => {
     if (state.data) {
       navigate({ pathname: '/payment', search: `?orderId=${state.data.id}` });
+      clearCartData();
     }
   }, [state.data, navigate]);
 

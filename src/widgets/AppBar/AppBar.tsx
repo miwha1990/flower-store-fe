@@ -19,7 +19,7 @@ import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import * as React from 'react';
 
-import { useAppStore } from '@/app/App';
+import { useAppStore } from '@/app/store';
 import { ShoppingCartDrawer } from '@/pages/home/components/ShopingCartDrawer';
 import cn from 'classnames';
 import Css from './AppBar.module.css';

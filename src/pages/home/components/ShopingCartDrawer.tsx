@@ -1,6 +1,6 @@
 import { Box, Drawer, Typography, Button } from '@mui/material';
 import { useNavigate } from 'react-router';
-import { useAppStore } from '@/app/App';
+import { useAppStore } from '@/app/store';
 import { Order } from '@/shared/Order';
 
 export function ShoppingCartDrawer({

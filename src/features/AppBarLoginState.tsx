@@ -1,4 +1,5 @@
 import { UserContext } from '@/app/useUser';
+import { clearCartData } from '@/app/store';
 import LogoutIcon from '@mui/icons-material/Logout';
 import {
   Button,
@@ -53,6 +54,7 @@ export default function AppBarLoginState({ isMobile }: { isMobile?: boolean }) {
 
   const handleLogout = () => {
     localStorage.removeItem('user');
+    clearCartData();
     setUser(null);
     removeCookie('API_TOKEN');
   };
