@@ -30,7 +30,7 @@ const style = {
 };
 
 export function FlowerDetails({ open, onClose, flower }: FlowerDetailsProps) {
-  const isMobile = useMediaQuery('(max-width:420px)');
+  const isMobile = useMediaQuery('(max-width:440px)');
   const [amount, setAmount] = useState(1);
   const addItemToCard = useAppStore((state) => state.addBucketItem);
 
@@ -60,7 +60,7 @@ export function FlowerDetails({ open, onClose, flower }: FlowerDetailsProps) {
         </Box>
         <Stack sx={{ flex: 1 }}>
           <Stack sx={{ flex: 1 }}>
-            <Typography variant="h2" id="parent-modal-title">
+            <Typography variant={isMobile ? "h4" : "h2"} id="parent-modal-title">
               {flower.name}
             </Typography>
             <Stack flexDirection={'row'} justifyContent={'space-between'}>
